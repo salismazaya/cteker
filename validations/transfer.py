@@ -6,4 +6,4 @@ class Transfer(BaseModel):
     amount: float
     signature: str
     unique: str
-    gas: int = 21_000
+    gas: int

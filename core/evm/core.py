@@ -160,7 +160,7 @@ class EvmTokenCore(EvmCore):
         return int(decimals.decode())
 
     async def get_balance(self) -> float:
-        address = Account.from_key(self.get_private_key()).address
+        address = self.get_address()
         decimals = await self.get_decimals()
         balance = await self.contract.functions.balanceOf(address).call()
         return balance / (10 ** decimals)
