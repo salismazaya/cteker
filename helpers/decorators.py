@@ -7,8 +7,8 @@ def cache_redis(expired: int):
         @wraps(func)
         async def wrapper(*args, **kwargs):
             hashed_func_value = hash(func)
-            hashed_args_value = hash(args)
-            hashed_kwargs_value = hash(func)
+            hashed_args_value = hash(frozenset(args))
+            hashed_kwargs_value = hash(frozenset(kwargs.items()))
             key = f"cache_redis_{hashed_func_value}:{hashed_args_value}:{hashed_kwargs_value}"
             cache_value = await redis_client.get(key)
             if cache_value is None:
