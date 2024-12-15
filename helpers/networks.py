@@ -1,8 +1,13 @@
 import core.core
 from networks.default import networks as default_networks
-from networks.custom_networks import networks as custom_networs
 
-NETWORKS = default_networks + custom_networs
+try:
+    custom_networks = __import__("networks.custom_networks", fromlist = ['networks'])
+    custom_networks = custom_networks.networks
+except:
+    custom_networks = []
+
+NETWORKS = default_networks + custom_networks
 
 def get_network_by_id(_id: str) -> 'core.core.Core':
     for network in NETWORKS:
