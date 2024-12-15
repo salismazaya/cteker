@@ -6,7 +6,7 @@
 - **EVM**: ✅
 - **TRON**: ✅
 - **Solana**: 🔜 (Coming Soon)
-- **TON**: 🔜 (Coming Soon)
+- **TON**: 🔜 (50%)
 
 ---
 
@@ -42,12 +42,36 @@ Follow these steps to set up and run the project:
    pip install -r requirements.txt
    ```
 
-6. **Run the FastAPI server** ▶️
+6. **(Optional) Create a New File for Custom Networks**
+   You can create a new file at `networks/custom_networks.py` to define custom networks.
+
+   #### Example:
+
+   ```python
+   # networks/custom_networks.py
+   from core.evm.evm_flexible import EvmFlexible
+
+   networks = [
+      EvmFlexible(
+         "custom-eth-mainnet", # unique id
+         "Ethereum Mainnet", # network name
+         "ETH", # network symbol
+         "ETHUSDT",  # binance ticker
+         "https://eth.drpc.org", # http rpc url
+         "https://etherscan.io/tx/" # explorer
+      ),
+   ]
+   ```
+   
+7. **Run the FastAPI server** ▶️
    ```bash
    fastapi run
    ```
 
-7. 🎉 **Enjoy your API!**
+8. **Access Documentation**  
+   Open the documentation in your browser at: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+
+9. 🎉 **Enjoy your API!**
 
 ---
 

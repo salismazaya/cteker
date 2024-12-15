@@ -4,17 +4,17 @@ from asgiref.sync import sync_to_async
 import pickle, asyncio
 
 def limit_concurrent_request(limit: int):
-    def wrapper(func):
+    def decorator(func):
         semaphore = asyncio.Semaphore(limit)
 
         @wraps(func)
-        async def decorator(*args, **kwargs):
+        async def wrapper(*args, **kwargs):
             async with semaphore:
                 return await func(*args, **kwargs)
         
-        return decorator
+        return wrapper
 
-    return wrapper
+    return decorator
 
 def cache_redis(expired: int):
     def decorator(func):
