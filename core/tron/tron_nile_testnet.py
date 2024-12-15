@@ -8,7 +8,7 @@ class TronNileTestnet(TronNileTestnetClientMixin, TronCore):
         return 'https://nile.tronscan.org/#/transaction/' + tx_hash
     
     def get_name(self):
-        return "TRON"
+        return "TRON NILE TESTNET"
     
     def get_symbol(self):
         return "TRX"

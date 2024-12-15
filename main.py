@@ -1,18 +1,26 @@
-# load .env
+# setup
+
 from dotenv import load_dotenv
 from pathlib import Path
-
 
 env_path_file = Path(__file__).parent / '.env'
 
 load_dotenv(env_path_file)
-# end load .env
+
+from helpers.networks import NETWORKS
+
+_ = [_.get_id() for _ in NETWORKS]
+if len(_) != len(set(_)):
+    raise ValueError("network id contains duplicate")
+
+# setup completed
 
 from fastapi import FastAPI, status
 from fastapi.responses import JSONResponse
 from helpers.networks import get_network_by_id
 from core import constants
 from helpers.redis import redis_client
+from helpers.decorators import cache_redis, limit_concurrent_request
 import validations.transfer
 import exceptions.transaction
 import hashlib, asyncio
@@ -20,6 +28,41 @@ import hashlib, asyncio
 app = FastAPI()
 
 transfer_lock = asyncio.Lock()
+
+@app.get('/networks')
+@cache_redis(10)
+@limit_concurrent_request(1)
+# Limit concurrent requests to 1
+# If caching is enabled, the limit will be disabled
+async def fetch_networks():
+    semaphore = asyncio.Semaphore(constants.CPU_COUNT)
+
+    async def fetch(network):
+        async with semaphore:
+            return {
+                'id': network.get_id(),
+                'name': network.get_name(),
+                'symbol': network.get_symbol(),
+                'balance': await network.get_balance(),
+                'price': await network.get_price(),
+                'binance_ticker': network.get_binance_ticker()
+            }
+    
+    try:
+        networks = await asyncio.gather(*[fetch(network) for network in NETWORKS])
+        response = {
+            'status': 'ok',
+            'data': {
+                'networks': networks
+            }
+        }
+        return response
+    except:
+        response = {
+            'status': 'bad',
+            'message': 'failed fetch data'
+        }
+        return JSONResponse(response, status_code = status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @app.post('/transfer')
 async def transfer(transfer: validations.transfer.Transfer):
@@ -53,23 +96,47 @@ async def transfer(transfer: validations.transfer.Transfer):
 
     return {
         'status': 'ok',
-        'tx_hash': tx_hash_prefixed
+        'data': {
+            'tx_hash': tx_hash_prefixed
+        }
     }
 
-@app.get('/price')
-async def transfer(network_id: str):
+@app.get('/networks/{network_id}')
+@cache_redis(10)
+@limit_concurrent_request(1)
+# Limit concurrent requests to 1
+# If caching is enabled, the limit will be disabled
+async def get_network(network_id: str):
     try:
         network = get_network_by_id(network_id)
-        price = await network.get_price()
-    except ValueError as e:
+    except ValueError:
         content = {
             'status': 'bad',
-            'message': str(e)
+            'message': 'bad network_id'
         }
         return JSONResponse(content, status_code = status.HTTP_400_BAD_REQUEST)
-
-    return {
-        'status': 'ok',
-        'price': price,
-        'ticker': network.get_binance_ticker()
-    }
+    
+    async def fetch(network):
+        return {
+            'id': network.get_id(),
+            'name': network.get_name(),
+            'symbol': network.get_symbol(),
+            'balance': await network.get_balance(),
+            'price': await network.get_price(),
+            'binance_ticker': network.get_binance_ticker()
+        }
+    
+    try:
+        result = await fetch(network)
+        return {
+            'status': 'ok',
+            'data': {
+                'network': result
+            }
+        }
+    except:
+        content = {
+            'status': 'bad',
+            'message': 'failed fetch data'
+        }
+        return JSONResponse(content, status_code = status.HTTP_500_INTERNAL_SERVER_ERROR)

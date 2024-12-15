@@ -1,6 +1,19 @@
 from functools import wraps
 from helpers.redis import redis_client
-import pickle
+import pickle, asyncio
+
+def limit_concurrent_request(limit: int):
+    def wrapper(func):
+        semaphore = asyncio.Semaphore(limit)
+
+        @wraps(func)
+        async def decorator(*args, **kwargs):
+            async with semaphore:
+                return await func(*args, **kwargs)
+        
+        return decorator
+
+    return wrapper
 
 def cache_redis(expired: int):
     def decorator(func):

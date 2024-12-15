@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from helpers.decorators import cache_redis
+from decimal import Decimal
 import aiohttp
 
 class Core(ABC):
@@ -35,15 +36,15 @@ class Core(ABC):
     def get_binance_ticker(self) -> str:
         raise NotImplementedError
 
-    @cache_redis(60)
-    async def get_price(self) -> float:
+    @cache_redis(30)
+    async def get_price(self) -> Decimal:
         ticker_binance = self.get_binance_ticker()
         url = f"https://data-api.binance.vision/api/v3/ticker/price?symbol={ticker_binance}"
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
                 result = await response.json()
 
-        price = result['price']
+        price = Decimal(result['price'])
         return price
 
     @abstractmethod

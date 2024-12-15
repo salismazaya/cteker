@@ -1,6 +1,6 @@
 from typing import Final
 from pathlib import Path
-import json, os
+import json, os, multiprocessing
 
 EVM_PRIVATE_KEY: Final = os.environ['EVM_PRIVATE_KEY']
 TRON_PRIVATE_KEY: Final = os.environ['TRON_PRIVATE_KEY']
@@ -12,3 +12,5 @@ with open(Path(__file__).parent.joinpath('evm/abis/aggregator.abi.json')) as f:
 
 with open(Path(__file__).parent.joinpath('evm/abis/erc20.abi.json')) as f:
     EVM_ERC20_CONTRACT_ABI: Final = json.loads(f.read())
+
+CPU_COUNT = multiprocessing.cpu_count()
