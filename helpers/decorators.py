@@ -1,5 +1,6 @@
 from functools import wraps
 from helpers.redis import redis_client
+from asgiref.sync import sync_to_async
 import pickle, asyncio
 
 def limit_concurrent_request(limit: int):
@@ -26,11 +27,11 @@ def cache_redis(expired: int):
             cache_value = await redis_client.get(key)
             if cache_value is None:
                 result = await func(*args, **kwargs)
-                pickled_result = pickle.dumps(result)
+                pickled_result = await sync_to_async(pickle.dumps)(result)
                 await redis_client.set(key, pickled_result, ex = expired)
                 return result
 
-            depickled_value = pickle.loads(cache_value) 
+            depickled_value = await sync_to_async(pickle.loads)(cache_value) 
             return depickled_value
         
         return wrapper

@@ -3,3 +3,4 @@ web3==6.*
 redis
 aiohttp
 tronpy
+asgiref
