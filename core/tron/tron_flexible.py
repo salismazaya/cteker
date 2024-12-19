@@ -1,6 +1,6 @@
 from .core import TronTokenCore, TronNileTestnetClientMixin, TronMainnetClientMixin
 
-class TronNilTestnetTokenFlexible(TronNileTestnetClientMixin, TronTokenCore):
+class TronNileTestnetTokenFlexible(TronNileTestnetClientMixin, TronTokenCore):
     def __init__(self, _id: str, token_address: str, name: str, symbol: str, binance_ticker: str):
         self._id = _id
         self._symbol = symbol
@@ -24,5 +24,5 @@ class TronNilTestnetTokenFlexible(TronNileTestnetClientMixin, TronTokenCore):
     def get_binance_ticker(self):
         return self._binance_ticker
 
-class TronMainnetTokenFlexible(TronMainnetClientMixin, TronNilTestnetTokenFlexible):
+class TronMainnetTokenFlexible(TronMainnetClientMixin, TronNileTestnetTokenFlexible):
     pass

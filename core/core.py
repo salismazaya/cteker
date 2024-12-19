@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from helpers.decorators import cache_redis
 from decimal import Decimal
+from helpers.log import logger
 import aiohttp
 
 class Core(ABC):
@@ -43,6 +44,7 @@ class Core(ABC):
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
                 result = await response.json()
+                logger.debug("(%s) response from binance api: %s", ticker_binance, result)
 
         price = Decimal(result['price'])
         return price

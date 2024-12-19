@@ -29,10 +29,10 @@ class EvmFlexible(EvmCore):
         return self._base_explorer_prefix_url + tx_hash
 
 
-class EvmFlexibleToken(EvmTokenCore, EvmFlexible):
+class EvmFlexibleToken(EvmFlexible, EvmTokenCore):
     def __init__(self, _id: str, name: str, symbol: str, token_address: str, binance_ticker: str, http_rpc_url: str, base_explorer_prefix_url: str):
-        super().__init__(_id, name, symbol, binance_ticker, http_rpc_url, base_explorer_prefix_url)
         self._token_address = token_address
+        super().__init__(_id, name, symbol, binance_ticker, http_rpc_url, base_explorer_prefix_url)
     
     def get_token_address(self):
         return self._token_address

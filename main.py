@@ -1,4 +1,4 @@
-# setup
+# ======== SETUP ========
 
 from dotenv import load_dotenv
 from pathlib import Path
@@ -13,17 +13,21 @@ _ = [_.get_id() for _ in NETWORKS]
 if len(_) != len(set(_)):
     raise ValueError("network id contains duplicate")
 
-# setup completed
+from helpers.log import logger
+
+logger.info("SETUP COMPLETED")
+
+# ======== SETUP COMPLETED ========
 
 from fastapi import FastAPI, status
 from fastapi.responses import JSONResponse
 from helpers.networks import get_network_by_id
-from core import constants
 from helpers.redis import redis_client
 from helpers.decorators import cache_redis, limit_concurrent_request
 import validations.transfer
 import exceptions.transaction
-import hashlib, asyncio
+import hashlib, asyncio, traceback
+from core import constants
 
 app = FastAPI()
 
@@ -43,6 +47,7 @@ async def fetch_networks():
                 'id': network.get_id(),
                 'name': network.get_name(),
                 'symbol': network.get_symbol(),
+                'address': network.get_address(),
                 'balance': await network.get_balance(),
                 'price': await network.get_price(),
                 'binance_ticker': network.get_binance_ticker()
@@ -58,10 +63,13 @@ async def fetch_networks():
         }
         return response
     except:
+        logger.exception("ERROR")
+
         response = {
             'status': 'bad',
             'message': 'failed fetch data'
         }
+        
         return JSONResponse(response, status_code = status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @app.post('/transfer')
@@ -85,6 +93,8 @@ async def transfer(transfer: validations.transfer.Transfer):
         tx_hash = await network.transfer(transfer.receipent, transfer.amount, gas = transfer.gas)
         tx_hash_prefixed = network.add_explorer(tx_hash)
     except (exceptions.transaction.TransactionFailed, ValueError) as e:
+        logger.exception("ERROR")
+
         content = {
             'status': 'bad',
             'message': str(e)
@@ -110,10 +120,13 @@ async def get_network(network_id: str):
     try:
         network = get_network_by_id(network_id)
     except ValueError:
+        logger.debug(f"network id {network_id} not found!")
+
         content = {
             'status': 'bad',
             'message': 'bad network_id'
         }
+
         return JSONResponse(content, status_code = status.HTTP_400_BAD_REQUEST)
     
     async def fetch(network):
@@ -121,6 +134,7 @@ async def get_network(network_id: str):
             'id': network.get_id(),
             'name': network.get_name(),
             'symbol': network.get_symbol(),
+            'address': network.get_address(),
             'balance': await network.get_balance(),
             'price': await network.get_price(),
             'binance_ticker': network.get_binance_ticker()
@@ -135,8 +149,11 @@ async def get_network(network_id: str):
             }
         }
     except:
+        logger.exception("ERROR")
+        
         content = {
             'status': 'bad',
             'message': 'failed fetch data'
         }
+
         return JSONResponse(content, status_code = status.HTTP_500_INTERNAL_SERVER_ERROR)

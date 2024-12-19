@@ -1,4 +1,6 @@
-fastapi[standard]
+fastapi
+granian
+python-dotenv
 web3==6.*
 redis
 aiohttp

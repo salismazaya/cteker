@@ -5,8 +5,7 @@ from tonutils.wallet import WalletV4R2
 from tonutils.client import TonapiClient
 from tonutils.utils import Address
 import aiohttp.client_exceptions
-from helpers.lock import RedisLock
-from helpers.redis import redis_client
+from helpers.locks import RedisLock
 import asyncio
 
 class TonMainnetClientMixin:
@@ -69,9 +68,9 @@ class TonCore(Core):
                 return 0
             
             raise e
-        
+    
     def get_transaction_lock(self, receipent: str, amount: float) -> RedisLock:
-        return RedisLock(f'{receipent}:{amount}')
+        return RedisLock(f'{self.get_id()}:{receipent}:{amount}')
 
     async def transfer(self, receipent: str, amount: float) -> str:
         async with self.get_transaction_lock(receipent, amount):

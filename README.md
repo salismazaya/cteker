@@ -65,8 +65,10 @@ Follow these steps to set up and run the project:
    
 7. **Run the FastAPI server** ▶️
    ```bash
-   fastapi run
+   granian --interface asgi main:app
    ```
+
+   Granian is a Rust HTTP server for Python applications. You can read more about it [here](https://github.com/emmett-framework/granian).
 
 8. **Access Documentation**  
    Open the documentation in your browser at: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)

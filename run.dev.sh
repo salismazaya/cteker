@@ -1,0 +1,1 @@
+granian --interface asgi main:app --reload
