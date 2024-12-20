@@ -4,11 +4,11 @@ from web3.middleware.geth_poa import async_geth_poa_middleware
 from web3 import AsyncWeb3, Account
 from core import constants
 from helpers.redis import redis_client
+from helpers.locks import RedisLock
 from helpers.decorators import cache_redis
-import re, asyncio
+from helpers.log import logger
+import re
 import exceptions.transaction
-
-transaction_lock = asyncio.Lock() 
 
 class EvmCore(Core):
     def __init__(self):
@@ -29,6 +29,9 @@ class EvmCore(Core):
             self._chain_id = await self.w3.eth.chain_id
         
         return self._chain_id
+
+    def get_transaction_lock(self):
+        return RedisLock(f"transaction_evm_{self._chain_id}")
 
     # def get_http_rpc_for_price_contract(self):
     #     return self.get_http_rpc()
@@ -90,11 +93,10 @@ class EvmCore(Core):
     
     async def get_nonce(self, address = None):
         chain_id = await self.get_chain_id()
-        async with transaction_lock:
-            nonce = int(await redis_client.get(f'nonce_evm_{chain_id}:{address}') or 0)
-            if nonce < 0:
-                nonce = await self.get_current_nonce()
-                await redis_client.set(f'nonce_evm_{chain_id}:{address}', nonce)
+        nonce = int(await redis_client.get(f'nonce_evm_{chain_id}:{address}') or 0)
+        if nonce <= 0:
+            nonce = await self.get_current_nonce()
+            await redis_client.set(f'nonce_evm_{chain_id}:{address}', nonce)
 
         return nonce
     
@@ -114,26 +116,30 @@ class EvmCore(Core):
             'gas': gas,
             'gasPrice': gas_price,
             'nonce': nonce,
-            'chainId': await self.w3.eth.chain_id,
+            'chainId': await self.get_chain_id()
         }
         return transaction
 
-    async def transfer(self, receipent: str, amount: float, gas: int = 2100) -> str:
+    async def transfer(self, receipent: str, amount: float, gas: int = 21_000) -> str:
+        chain_id = await self.get_chain_id()
+        address = self.get_address()
+
         try:
-            transaction = await self.generate_trx(receipent, amount, gas)
-            signed_transaction = self.w3.eth.account.sign_transaction(transaction, self.get_private_key())
-            tx_hash = await self.w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
+            async with self.get_transaction_lock():
+                transaction = await self.generate_trx(receipent, amount, gas)
+                signed_transaction = self.w3.eth.account.sign_transaction(transaction, self.get_private_key())
+                try:
+                    tx_hash = await self.w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
+                except Exception as e:
+                    raise exceptions.transaction.TransactionBroadcastFailed(str(e))
+                
+                new_nonce = await redis_client.incr(f'nonce_evm_{chain_id}:{address}')
+                logger.debug("current EVM nonce with chain id: %s (%s) is %s", chain_id, self.get_name(), new_nonce)
+
             tx_hash_hex = tx_hash.hex()
-
-            chain_id = await self.get_chain_id()
-            address = self.get_address()
-
-            async with transaction_lock:
-                await redis_client.incr(f'nonce_evm_{chain_id}:{address}')
-
             return tx_hash_hex
         
-        except ValueError as e:
+        except exceptions.transaction.TransactionBroadcastFailed as e:                
             error_message = re.search(r"message': *'(.+)'\}", str(e))[1]
             raise exceptions.transaction.TransactionFailed(error_message)
 
@@ -141,23 +147,23 @@ class EvmCore(Core):
 class EvmTokenCore(EvmCore):
     def __init__(self):
         super().__init__()
-        self.contract = self.w3.eth.contract(self.w3.to_checksum_address(self.get_token_address()), abi = constants.EVM_ERC20_CONTRACT_ABI)
+        self._contract = self.w3.eth.contract(self.w3.to_checksum_address(self.get_token_address()), abi = constants.EVM_ERC20_CONTRACT_ABI)
+        self._decimals = None
+
+    @property
+    def contract(self):
+        return self._contract
 
     @abstractmethod
     def get_token_address(self) -> str:
         raise NotImplementedError
 
     async def get_decimals(self) -> int:
-        chain_id = await self.get_chain_id()
-        token_address = self.get_token_address()
-        key = f'{chain_id}:{token_address}'
-        decimals = await redis_client.get(f'decimals_{key}')
-        if decimals is None:
+        if self._decimals is None:
             decimals = await self.contract.functions.decimals().call()
-            decimals = await redis_client.set(f'decimals_{key}', decimals)
-            return decimals
-
-        return int(decimals.decode())
+            self._decimals = int(decimals)
+        
+        return self._decimals
 
     async def get_balance(self) -> float:
         address = self.get_address()

@@ -2,12 +2,38 @@
 
 **Cteker (Cryptocurrency Transaction Maker)** is a REST API web project built with **Python FastAPI** to send cryptocurrency across multiple blockchain networks.
 
+## ⚠️ Danger
+**Cteker is currently under development and has not been fully tested. Use at your own risk.**
+
 ## Supported Networks 🌉
 - **EVM**: ✅
 - **TRON**: ✅
 - **Solana**: 🔜 (Coming Soon)
 - **TON**: 🔜 (50%)
+- **Bitcoin**: 🔜 (Coming Soon)
+- **Litecoin**: 🔜 (Coming Soon)
+- **Dogecoin**: 🔜 (Coming Soon)
+- **SUI**: 🔜 (Coming Soon)
+- **SEI**: 🔜 (Coming Soon)
+---
+## Why Use Cteker? 📋
+Cteker provides a robust and efficient way to handle multiple coins and tokens using a unified abstraction layer. Here’s why Cteker is the right choice for your blockchain development needs:
 
+1. Multi-Coin and Multi-Token Support
+
+Cteker supports a wide range of coins and tokens under the same abstraction, enabling seamless integration and management.
+
+2. Expandable Network and Token Support
+
+Easily add new networks or tokens using the existing abstraction, making Cteker highly adaptable to your project’s requirements.
+
+3. Automatic Nonce Management
+
+Cteker automatically handles nonces, ensuring reliable support for multiple simultaneous transactions without manual intervention.
+
+4. Simplified Request Handling
+
+Just send your request to Cteker, and let it manage the complexities. With Cteker, you can focus on your application logic while we handle the underlying processes.
 ---
 
 ## Requirements 📋

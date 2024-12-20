@@ -23,15 +23,16 @@ from fastapi import FastAPI, status
 from fastapi.responses import JSONResponse
 from helpers.networks import get_network_by_id
 from helpers.redis import redis_client
+from helpers.locks import RedisLock
 from helpers.decorators import cache_redis, limit_concurrent_request
 import validations.transfer
 import exceptions.transaction
-import hashlib, asyncio, traceback
+import hashlib, asyncio
 from core import constants
 
 app = FastAPI()
 
-transfer_lock = asyncio.Lock()
+transfer_lock = RedisLock("transfer")
 
 @app.get('/networks')
 @cache_redis(10)
