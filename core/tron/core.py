@@ -5,6 +5,7 @@ from core.core import Core
 from helpers.decorators import cache_redis
 from core import constants
 from abc import abstractmethod
+from decimal import Decimal
 import re
 
 class TronMainnetClientMixin:
@@ -36,17 +37,17 @@ class TronCore(Core):
         address = pub_key.to_base58check_address()
         return address
 
-    async def get_balance(self) -> float:
+    async def get_balance(self) -> Decimal:
         async with self.get_client() as client:
             pub_key: PublicKey = PrivateKey.fromhex(self.get_private_key()).public_key
             address = pub_key.to_base58check_address()
             
             try:
-                return float(await client.get_account_balance(address))
+                return Decimal(await client.get_account_balance(address))
             except:
-                return 0
+                return Decimal(0)
     
-    async def transfer(self, receipent: str, amount: float, gas = 1_000_000) -> str:
+    async def execute_transfer(self, receipent: str, amount: float, gas = 1_000_000) -> str:
         async with self.get_client() as client:
             address = self.get_address()
             txb = client.trx.transfer(
@@ -72,7 +73,7 @@ class TronTokenCore(TronCore):
             contract = await client.get_contract(token_address)
             return await contract.functions.decimals()
 
-    async def transfer(self, receipent: str, amount: float, gas = 10_000_000) -> str:
+    async def execute_transfer(self, receipent: str, amount: float, gas = 10_000_000) -> str:
         async with self.get_client() as client:
             token_address = self.get_token_address()
             contract = await client.get_contract(token_address)
@@ -90,9 +91,10 @@ class TronTokenCore(TronCore):
 
             return rv
 
-    async def get_balance(self) -> float:
+    async def get_balance(self) -> Decimal:
         async with self.get_client() as client:
             token_address = self.get_token_address()
             contract = await client.get_contract(token_address)
             address = self.get_address()
-            return await contract.functions.balanceOf(address) / (10 ** await self.get_decimals())
+            result = await contract.functions.balanceOf(address) / (10 ** await self.get_decimals())
+            return Decimal(result)

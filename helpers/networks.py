@@ -5,7 +5,7 @@ from typing import List
 try:
     custom_networks = __import__("networks.custom_networks", fromlist = ['networks'])
     custom_networks = custom_networks.networks
-except:
+except (ModuleNotFoundError, AttributeError):
     custom_networks = []
 
 NETWORKS: List[core.core.Core] = default_networks + custom_networks

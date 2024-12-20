@@ -4,6 +4,7 @@ from core.tron.tron_mainnet import TronMainnet
 from core.tron.tron_flexible import TronMainnetTokenFlexible
 from core.ton.ton_mainnet import TonMainnet
 from core.ton.ton_testnet import TonTestnet
+from helpers.locks import RedisLockRateLimitter
 from core import constants
 from helpers.log import logger
 
@@ -14,25 +15,30 @@ if not constants.EVM_PRIVATE_KEY is None:
     evm_networks = [
         EvmFlexible("eth-sepolia", "Sepolia", "ETH", "ETHUSDT",
                     "https://ethereum-sepolia-rpc.publicnode.com",
-                    "https://sepolia.etherscan.io/tx/"),
+                    "https://sepolia.etherscan.io/tx/")
+                    .as_ratelimitter(RedisLockRateLimitter('eth-sepolia', 5, 2)),
 
         EvmFlexible("eth-holesky", "Holesky", "ETH", "ETHUSDT",
                      "https://ethereum-holesky-rpc.publicnode.com",
-                     "https://holesky.etherscan.io/tx/"),
+                     "https://holesky.etherscan.io/tx/")
+                    .as_ratelimitter(RedisLockRateLimitter('eth-holesky', 5, 2)),
 
         EvmFlexible("eth-mainnet", "Ethereum Mainnet", "ETH", "ETHUSDT",
                      "https://eth.drpc.org",
-                     "https://etherscan.io/tx/"),
+                     "https://etherscan.io/tx/")
+                    .as_ratelimitter(RedisLockRateLimitter('eth-mainnet', 5, 2)),
         
         EvmFlexible("polygon-mainnet", "Polygon Mainnet", "POL", "POLUSDT",
                      "https://polygon.meowrpc.com",
-                     "https://polygonscan.com/tx/"),
+                     "https://polygonscan.com/tx/")
+                    .as_ratelimitter(RedisLockRateLimitter('polygon-mainnet', 5, 2)),
 
         EvmFlexibleToken("eth-mainnet-usdt", "USDT Ethereum Mainnet", "USDT",
                     '0xdac17f958d2ee523a2206206994597c13d831ec7',
                     "USDCUSDT",
                      "https://eth.drpc.org",
-                     "https://etherscan.io/tx/"),
+                     "https://etherscan.io/tx/")
+                    .as_ratelimitter(RedisLockRateLimitter('eth-mainnet', 5, 2)),
     ]
     # ======= END: ADD EVM NETWORKS HERE =======
     networks.extend(evm_networks)
@@ -44,7 +50,10 @@ if (not constants.TRON_PRIVATE_KEY is None) and (not constants.TRON_GRID_API_KEY
     # ======= ADD TRON NETWORKS HERE =======
     tron_networks = [
         TronNileTestnet(),
-        TronMainnet(),
+        
+        TronMainnet()
+        .as_ratelimitter(RedisLockRateLimitter('tron-mainnet', 5, 2)),
+
         TronMainnetTokenFlexible(
             "tron-mainnet-usdt",
             'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
@@ -52,6 +61,7 @@ if (not constants.TRON_PRIVATE_KEY is None) and (not constants.TRON_GRID_API_KEY
             'USDT',
             'USDCUSDT'
         )
+        .as_ratelimitter(RedisLockRateLimitter('tron-mainnet', 5, 2)),
     ]
     # ======= END: ADD TRON NETWORKS HERE =======
     networks.extend(tron_networks)
@@ -62,8 +72,11 @@ else:
 if (not constants.TON_MNEMONIC is None) and (not constants.TONAPI_API_KEY is None):
     # ======= ADD TON NETWORKS HERE =======
     ton_networks = [
-        TonMainnet(),
-        TonTestnet()
+        TonMainnet()
+        .as_ratelimitter(RedisLockRateLimitter('ton-mainnet', 5, 2)),
+        
+        TonTestnet(),
+
     ]
     # ======= END: ADD TON NETWORKS HERE =======
     networks.extend(ton_networks)

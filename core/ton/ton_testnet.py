@@ -15,6 +15,3 @@ class TonTestnet(TonTestnetClientMixin, TonCore):
     
     def get_binance_ticker(self):
         return 'TONUSDT'
-    
-    def get_address(self) -> str:
-        return self.wallet.address.to_str(True, True, False, True)

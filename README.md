@@ -17,23 +17,24 @@
 - **SEI**: 🔜 (Coming Soon)
 ---
 ## Why Use Cteker? 📋
-Cteker provides a robust and efficient way to handle multiple coins and tokens using a unified abstraction layer. Here’s why Cteker is the right choice for your blockchain development needs:
+   Cteker provides a robust and efficient way to handle multiple coins and tokens using a unified abstraction layer. Here’s why Cteker is the right choice for your blockchain development needs:
 
 1. Multi-Coin and Multi-Token Support
 
-Cteker supports a wide range of coins and tokens under the same abstraction, enabling seamless integration and management.
+   Cteker supports a wide range of coins and tokens under the same abstraction, enabling seamless integration and management.
 
 2. Expandable Network and Token Support
 
-Easily add new networks or tokens using the existing abstraction, making Cteker highly adaptable to your project’s requirements.
+   Easily add new networks or tokens using the existing abstraction, making Cteker highly adaptable to your project’s requirements.
 
 3. Automatic Nonce Management
 
-Cteker automatically handles nonces, ensuring reliable support for multiple simultaneous transactions without manual intervention.
+   Cteker automatically handles nonces, ensuring reliable support for multiple simultaneous transactions without manual intervention.
 
 4. Simplified Request Handling
 
-Just send your request to Cteker, and let it manage the complexities. With Cteker, you can focus on your application logic while we handle the underlying processes.
+   Just send your request to Cteker, and let it manage the complexities. With Cteker, you can focus on your application logic while we handle the underlying processes.
+
 ---
 
 ## Requirements 📋

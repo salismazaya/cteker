@@ -7,6 +7,7 @@ from helpers.redis import redis_client
 from helpers.locks import RedisLock
 from helpers.decorators import cache_redis
 from helpers.log import logger
+from decimal import Decimal
 import re
 import exceptions.transaction
 
@@ -83,13 +84,14 @@ class EvmCore(Core):
         address = Account.from_key(self.get_private_key()).address
         return str(address)
 
-    async def get_balance(self) -> float:
+    async def get_balance(self) -> Decimal:
         address = Account.from_key(self.get_private_key()).address
         balance_wei = await self.w3.eth.get_balance(self.w3.to_checksum_address(address))
-        return self.w3.from_wei(
+        result = self.w3.from_wei(
             balance_wei,
             'ether'
         )
+        return Decimal(result)
     
     async def get_nonce(self, address = None):
         chain_id = await self.get_chain_id()
@@ -120,7 +122,7 @@ class EvmCore(Core):
         }
         return transaction
 
-    async def transfer(self, receipent: str, amount: float, gas: int = 21_000) -> str:
+    async def execute_transfer(self, receipent: str, amount: float, gas: int = 21_000) -> str:
         chain_id = await self.get_chain_id()
         address = self.get_address()
 
@@ -165,11 +167,11 @@ class EvmTokenCore(EvmCore):
         
         return self._decimals
 
-    async def get_balance(self) -> float:
+    async def get_balance(self) -> Decimal:
         address = self.get_address()
         decimals = await self.get_decimals()
         balance = await self.contract.functions.balanceOf(address).call()
-        return balance / (10 ** decimals)
+        return Decimal(balance / (10 ** decimals))
 
     async def generate_trx(self, receipent: str, amount: float, gas = 70_000):
         address = self.get_address()
