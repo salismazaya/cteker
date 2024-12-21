@@ -82,7 +82,7 @@ class TonCore(Core):
     def get_transaction_lock(self, receipent: str, amount: float) -> RedisLock:
         return RedisLock(f'{self.get_id()}:{receipent}:{amount}')
 
-    async def execute_transfer(self, receipent: str, amount: float, *args, **kwargs) -> str:
+    async def transfer(self, receipent: str, amount: float, *args, **kwargs) -> str:
         async with self.get_transaction_lock(receipent, amount):
             tx_hash = await self.wallet.transfer(
                 destination = receipent,
@@ -101,7 +101,7 @@ class TonTokenCore(TonCore):
     def get_decimals(self) -> int:
         raise NotImplementedError
 
-    async def execute_transfer(self, receipent: str, amount: float, *args, **kwargs) -> str:
+    async def transfer(self, receipent: str, amount: float, *args, **kwargs) -> str:
         decimals = self.get_decimals()
         if inspect.isawaitable(decimals):
             decimals = await decimals

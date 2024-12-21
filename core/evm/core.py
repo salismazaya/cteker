@@ -122,7 +122,7 @@ class EvmCore(Core):
         }
         return transaction
 
-    async def execute_transfer(self, receipent: str, amount: float, gas: int = 21_000) -> str:
+    async def transfer(self, receipent: str, amount: float, gas: int = 21_000) -> str:
         chain_id = await self.get_chain_id()
         address = self.get_address()
 

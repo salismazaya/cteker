@@ -47,7 +47,7 @@ class TronCore(Core):
             except:
                 return Decimal(0)
     
-    async def execute_transfer(self, receipent: str, amount: float, gas = 1_000_000) -> str:
+    async def transfer(self, receipent: str, amount: float, gas = 1_000_000) -> str:
         async with self.get_client() as client:
             address = self.get_address()
             txb = client.trx.transfer(
@@ -73,7 +73,7 @@ class TronTokenCore(TronCore):
             contract = await client.get_contract(token_address)
             return await contract.functions.decimals()
 
-    async def execute_transfer(self, receipent: str, amount: float, gas = 10_000_000) -> str:
+    async def transfer(self, receipent: str, amount: float, gas = 10_000_000) -> str:
         async with self.get_client() as client:
             token_address = self.get_token_address()
             contract = await client.get_contract(token_address)

@@ -18,15 +18,19 @@ class RedisLockRateLimitter:
     @property
     def key(self):
         return f"lock_rate_limit_{self._key}"
+    
+    async def wait(self):
+        while True:
+            try:
+                output = await redis_client.incr(self.key)
+                await redis_client.expire(self.key, self._seconds, nx = True)
+                if output <= self._total_transactions:
+                    break
+            finally:
+                await asyncio.sleep(self._interval_sleep)
 
     async def __aenter__(self, *args, **kwargs):
-        if await redis_client.incr(self.key) > self._total_transactions:
-            await redis_client.expire(self.key, self._seconds, nx = True)
-            while True:
-                if await redis_client.get(self.key) is None:
-                    break
-
-                await asyncio.sleep(self._interval_sleep)
+        await self.wait()
 
     async def __aexit__(self, *args, **kwargs):
         pass

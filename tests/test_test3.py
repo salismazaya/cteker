@@ -18,7 +18,7 @@ async def main():
     network = get_network_by_id('eth-holesky')
     txs = []
 
-    for _ in range(10):
+    for _ in range(20):
         tx = network.transfer('0x59Ef8686E6065f38bD257976Da4d87300100d914', 0.00001)
         txs.append(tx)
 

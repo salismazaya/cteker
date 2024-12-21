@@ -18,7 +18,7 @@ async def main():
     network = get_network_by_id('tron-nile-testnet')
     txs = []
 
-    for _ in range(10):
+    for _ in range(20):
         tx = network.transfer('TVF2Mp9QY7FEGTnr3DBpFLobA6jguHyMvi', 0.01)
         txs.append(tx)
 
